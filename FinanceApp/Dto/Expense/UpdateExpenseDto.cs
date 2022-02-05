@@ -1,0 +1,19 @@
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace FinanceApp.Dto.Expense;
+
+public class UpdateExpenseDto
+{
+    [Required]
+    [MaxLength(30)]
+    public string Name { get; set; }
+
+    [Required]
+    public double Amount { get; set; }
+
+    public DateTime CreatedTime { get; set; }
+
+    [Required]
+    public Guid ExpenseCategoryId { get; set; }
+}
+
