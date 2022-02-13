@@ -1,11 +1,14 @@
 ﻿using FinanceApp.Dto.User;
+using FinanceApp.Entities;
 using FinanceApp.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FinanceApp.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
+[Authorize]
 public class UserController : ControllerBase
 {
     private readonly IUserService _userService;
@@ -15,6 +18,7 @@ public class UserController : ControllerBase
     }
 
     [HttpGet]
+    [Authorize(Roles = "Administrator")]
     public ActionResult<IEnumerable<UserDto>> GetAll()
     {
         var users = _userService.GetAll();
@@ -25,23 +29,13 @@ public class UserController : ControllerBase
     public ActionResult<UserDto> Get([FromRoute] Guid id)
     {
         var user = _userService.GetById(id);
-
-        if (user is null)
-        {
-            return NotFound();
-        }
-
         return Ok(user);
     }
 
     [HttpPost]
+    [AllowAnonymous]
     public ActionResult Create([FromBody] CreateUserDto createUserDto)
     {
-        if(!ModelState.IsValid)
-        {
-            return BadRequest(ModelState);
-        }
-
         var id = _userService.Create(createUserDto);
         return Created($"/api/user/{id}", null);
     }
@@ -49,29 +43,16 @@ public class UserController : ControllerBase
     [HttpPut("{id}")]
     public ActionResult Update([FromRoute] Guid id, [FromBody] UpdateUserDto updateUserDto)
     {
-        if (!ModelState.IsValid)
-        {
-            return BadRequest(ModelState);
-        }
-        var isUpdated = _userService.Update(id, updateUserDto);
-        if(!isUpdated)
-        {
-            return NotFound();
-        }
-
+        _userService.Update(id, updateUserDto);
         return Ok();
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Roles = "Administrator")]
     public ActionResult Delete([FromRoute] Guid id)
     {
-        var isDeleted = _userService.Delete(id);
-
-        if(isDeleted)
-        {
-            return NoContent();
-        }
-        return NotFound();
+        _userService.Delete(id);
+        return NoContent();
     }
 }
 

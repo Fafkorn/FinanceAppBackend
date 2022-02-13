@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FinanceApp.Migrations
 {
     [DbContext(typeof(FinanceAppDbContext))]
-    [Migration("20220205123603_expenses")]
-    partial class expenses
+    [Migration("20220210104735_Seed")]
+    partial class Seed
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -71,6 +71,33 @@ namespace FinanceApp.Migrations
                     b.ToTable("ExpenseCategories");
                 });
 
+            modelBuilder.Entity("FinanceApp.Entities.Role", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Roles");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("fab2c13f-f950-4977-a935-8e14e8dbac20"),
+                            Name = "Administrator"
+                        },
+                        new
+                        {
+                            Id = new Guid("0758e8d0-90cc-42f9-a49a-baf74ba3da15"),
+                            Name = "User"
+                        });
+                });
+
             modelBuilder.Entity("FinanceApp.Entities.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -85,12 +112,17 @@ namespace FinanceApp.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<Guid>("RoleId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("Username")
                         .IsRequired()
                         .HasMaxLength(25)
                         .HasColumnType("nvarchar(25)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("RoleId");
 
                     b.ToTable("Users");
                 });
@@ -112,6 +144,17 @@ namespace FinanceApp.Migrations
                     b.Navigation("ExpenseCategory");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("FinanceApp.Entities.User", b =>
+                {
+                    b.HasOne("FinanceApp.Entities.Role", "Role")
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Role");
                 });
 
             modelBuilder.Entity("FinanceApp.Entities.User", b =>

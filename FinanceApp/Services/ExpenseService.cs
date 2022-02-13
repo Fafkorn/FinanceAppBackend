@@ -1,26 +1,34 @@
 ﻿using AutoMapper;
+using FinanceApp.Authorization;
 using FinanceApp.Dto.Expense;
 using FinanceApp.Entities;
+using FinanceApp.Exceptions;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace FinanceApp.Services;
 
 public interface IExpenseService
 {
     IEnumerable<ExpenseDto> GetAll();
-    ExpenseDto? GetById(Guid id);
+    ExpenseDto GetById(Guid id);
     Guid Create(CreateExpenseDto createExpenseDto);
-    bool Update(Guid id, UpdateExpenseDto updateExpenseDto);
-    bool Delete(Guid id);
+    void Update(Guid id, UpdateExpenseDto updateExpenseDto);
+    void Delete(Guid id);
 }
 public class ExpenseService : IExpenseService
 {
     private readonly FinanceAppDbContext _dbContext;
     private readonly IMapper _mapper;
+    private readonly IAuthorizationService _authorizationService;
+    private readonly IUserContextService _userContextService;
 
-    public ExpenseService(FinanceAppDbContext dbContext, IMapper mapper)
+    public ExpenseService(FinanceAppDbContext dbContext, IMapper mapper, IAuthorizationService authorizationService, IUserContextService userContextService)
     {
         _dbContext = dbContext;
         _mapper = mapper;
+        _authorizationService = authorizationService;
+        _userContextService = userContextService;
     }
     public IEnumerable<ExpenseDto> GetAll()
     {
@@ -32,13 +40,14 @@ public class ExpenseService : IExpenseService
         return result;
     }
 
-    public ExpenseDto? GetById(Guid id)
+    public ExpenseDto GetById(Guid id)
     {
         var expense = _dbContext
            .Expenses
            .FirstOrDefault(r => r.Id == id);
 
-        if (expense is null) return null;
+        if (expense is null)
+            throw new NotFoundException("Expense not found");
 
         var result = _mapper.Map<ExpenseDto>(expense);
         return result;
@@ -47,36 +56,47 @@ public class ExpenseService : IExpenseService
     public Guid Create(CreateExpenseDto createExpenseDto)
     {
         var expense = _mapper.Map<Expense>(createExpenseDto);
+
+        expense.UserId = _userContextService.GetUserId.Value;
         _dbContext.Expenses.Add(expense);
         _dbContext.SaveChanges();
         return expense.Id;
     }
 
-    public bool Update(Guid id, UpdateExpenseDto updateExpenseDto)
+    public void Update(Guid id, UpdateExpenseDto updateExpenseDto)
     {
         var expense = _dbContext
             .Expenses
             .FirstOrDefault(r => r.Id == id);
 
-        if (expense is null) return false;
+        if (expense is null)
+            throw new NotFoundException("Expense not found");
 
-        //
+        var authorizationResult = _authorizationService.AuthorizeAsync(_userContextService.User, expense, 
+            new ResourceOperationRequirement(ResourceOperation.Update)).Result;
+
+        if(!authorizationResult.Succeeded)
+        {
+            throw new ForbiddenException("");
+        }
+        //TODO update
         _dbContext.SaveChanges();
-        return true;
     }
 
-    public bool Delete(Guid id)
+    public void Delete(Guid id)
     {
         var expense = _dbContext
             .Expenses
             .FirstOrDefault(r => r.Id == id);
 
-        if (expense is null) return false;
+        if (expense is null)
+            throw new NotFoundException("Expense not found");
+
+        var authorizationResult = _authorizationService.AuthorizeAsync(_userContextService.User, expense,
+            new ResourceOperationRequirement(ResourceOperation.Delete)).Result;
 
         _dbContext.Expenses.Remove(expense);
         _dbContext.SaveChanges();
-
-        return true;
     }
 }
 
