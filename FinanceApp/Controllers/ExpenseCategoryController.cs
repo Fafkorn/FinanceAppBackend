@@ -1,11 +1,13 @@
 ﻿using FinanceApp.Dto.ExpenseCategory;
 using FinanceApp.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FinanceApp.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
+[Authorize]
 public class ExpenseCategoryController : ControllerBase
 {
     private readonly IExpenseCategoryService _expenseCategoryService;
@@ -26,23 +28,12 @@ public class ExpenseCategoryController : ControllerBase
     public ActionResult<ExpenseCategoryDto> Get([FromRoute] Guid id)
     {
         var expenseCategory = _expenseCategoryService.GetById(id);
-
-        if (expenseCategory is null)
-        {
-            return NotFound();
-        }
-
         return Ok(expenseCategory);
     }
 
     [HttpPost]
     public ActionResult Create([FromBody] CreateExpenseCategoryDto createExpenseCategoryDto)
     {
-        if (!ModelState.IsValid)
-        {
-            return BadRequest(ModelState);
-        }
-
         var id = _expenseCategoryService.Create(createExpenseCategoryDto);
         return Created($"/api/expenseCategory/{id}", null);
     }
@@ -50,28 +41,14 @@ public class ExpenseCategoryController : ControllerBase
     [HttpPut("{id}")]
     public ActionResult Update([FromRoute] Guid id, [FromBody] UpdateExpenseCategoryDto updateExpenseCategoryDto)
     {
-        if (!ModelState.IsValid)
-        {
-            return BadRequest(ModelState);
-        }
-        var isUpdated = _expenseCategoryService.Update(id, updateExpenseCategoryDto);
-        if (!isUpdated)
-        {
-            return NotFound();
-        }
-
+        _expenseCategoryService.Update(id, updateExpenseCategoryDto);
         return Ok();
     }
 
     [HttpDelete("{id}")]
     public ActionResult Delete([FromRoute] Guid id)
     {
-        var isDeleted = _expenseCategoryService.Delete(id);
-
-        if (isDeleted)
-        {
-            return NoContent();
-        }
-        return NotFound();
+        _expenseCategoryService.Delete(id);
+        return NoContent();
     }
 }

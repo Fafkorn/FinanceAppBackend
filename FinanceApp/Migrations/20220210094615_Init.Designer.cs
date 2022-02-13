@@ -4,6 +4,7 @@ using FinanceApp;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FinanceApp.Migrations
 {
     [DbContext(typeof(FinanceAppDbContext))]
-    partial class FinanceAppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20220210094615_Init")]
+    partial class Init
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -82,18 +84,6 @@ namespace FinanceApp.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Roles");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("fab2c13f-f950-4977-a935-8e14e8dbac20"),
-                            Name = "Administrator"
-                        },
-                        new
-                        {
-                            Id = new Guid("0758e8d0-90cc-42f9-a49a-baf74ba3da15"),
-                            Name = "User"
-                        });
                 });
 
             modelBuilder.Entity("FinanceApp.Entities.User", b =>

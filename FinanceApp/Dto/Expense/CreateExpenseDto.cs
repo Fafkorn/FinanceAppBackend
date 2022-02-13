@@ -14,9 +14,6 @@ public class CreateExpenseDto
     public DateTime CreatedTime { get; set; }
 
     [Required]
-    public Guid UserId { get; set; }
-
-    [Required]
     public Guid ExpenseCategoryId { get; set; }
 }
 

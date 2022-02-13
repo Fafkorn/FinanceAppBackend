@@ -1,16 +1,17 @@
 ﻿using AutoMapper;
 using FinanceApp.Dto.ExpenseCategory;
 using FinanceApp.Entities;
+using FinanceApp.Exceptions;
 
 namespace FinanceApp.Services;
 
 public interface IExpenseCategoryService
 {
     IEnumerable<ExpenseCategoryDto> GetAll();
-    ExpenseCategoryDto? GetById(Guid id);
+    ExpenseCategoryDto GetById(Guid id);
     Guid Create(CreateExpenseCategoryDto createExpenseCategoryDto);
-    bool Update(Guid id, UpdateExpenseCategoryDto updateExpenseCategoryDto);
-    bool Delete(Guid id);
+    void Update(Guid id, UpdateExpenseCategoryDto updateExpenseCategoryDto);
+    void Delete(Guid id);
 }
 public class ExpenseCategoryService : IExpenseCategoryService
 {
@@ -33,13 +34,14 @@ public class ExpenseCategoryService : IExpenseCategoryService
         return result;
     }
 
-    public ExpenseCategoryDto? GetById(Guid id)
+    public ExpenseCategoryDto GetById(Guid id)
     {
         var expenseCategory = _dbContext
             .ExpenseCategories
             .FirstOrDefault(r => r.Id == id);
 
-        if (expenseCategory is null) return null;
+        if (expenseCategory is null)
+            throw new NotFoundException("Expense category not found");
 
         var result = _mapper.Map<ExpenseCategoryDto>(expenseCategory);
         return result;
@@ -53,30 +55,29 @@ public class ExpenseCategoryService : IExpenseCategoryService
         return expenseCategory.Id;
     }
 
-    public bool Update(Guid id, UpdateExpenseCategoryDto updateExpenseCategoryDto)
+    public void Update(Guid id, UpdateExpenseCategoryDto updateExpenseCategoryDto)
     {
         var expenseCategory = _dbContext
             .ExpenseCategories
             .FirstOrDefault(r => r.Id == id);
 
-        if (expenseCategory is null) return false;
+        if (expenseCategory is null)
+            throw new NotFoundException("Expense category not found");
 
         //
         _dbContext.SaveChanges();
-        return true;
     }
 
-    public bool Delete(Guid id)
+    public void Delete(Guid id)
     {
         var expenseCategory = _dbContext
             .ExpenseCategories
             .FirstOrDefault(r => r.Id == id);
 
-        if (expenseCategory is null) return false;
+        if (expenseCategory is null)
+            throw new NotFoundException("Expense category not found");
 
         _dbContext.ExpenseCategories.Remove(expenseCategory);
         _dbContext.SaveChanges();
-
-        return true;
     }
 }
